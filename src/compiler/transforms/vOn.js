@@ -45,5 +45,6 @@ export const transformOn = (dir) => {
   //   ret = augmentor(ret);
   // }
 
+  // ret.props.forEach(p => (p.key.isHandlerKey = true));
   return ret;
 };

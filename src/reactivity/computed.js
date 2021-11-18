@@ -1,8 +1,8 @@
 import { effect, track, trigger } from './effect';
 
-export function computed(getter) {
+export const computed = (getter) => {
   return new ComputedRefImpl(getter);
-}
+};
 
 class ComputedRefImpl {
   constructor(getter) {
@@ -10,7 +10,7 @@ class ComputedRefImpl {
     this.effect = effect(getter, () => {
       // scheduler
       if (!this._dirty) {
-        // 锁打开了
+        // 锁开了
         this._dirty = true;
         trigger(this, 'value');
       }
@@ -18,9 +18,7 @@ class ComputedRefImpl {
   }
 
   get value() {
-    // 依赖更新，重新计算
     if (this._dirty) {
-      // 计算并缓存最新的值
       this._value = this.effect();
       // 锁上了
       this._dirty = false;

@@ -1,4 +1,4 @@
-import { NodeTypes } from '../compiler';
+import { NodeTypes } from '../compiler/ast';
 
 export function isObject(target) {
   return typeof target === 'object' && target !== null;

@@ -1,7 +1,6 @@
 import { isBoolean } from '../utils';
 
 export function patchProps(oldProps, newProps, el) {
-  // 前后发生变化才做 patch
   if (oldProps === newProps) {
     return;
   }
@@ -40,21 +39,16 @@ const propsReg = /[A-Z]|^(value|checked|selected|muted|disabled)$/;
 
 function patchDomProp(prev, next, key, el) {
   switch (key) {
+    // 设置类名
     case 'class':
       el.className = next || '';
       break;
 
+    // 设置样式
     case 'style':
       if (next == null) {
         el.removeAttribute('style');
       } else {
-        // 将原有的样式删除
-        // prev {
-        //     color: 'red'
-        // }
-        // next {
-        //     border: '1px solid'
-        // }
         if (prev) {
           for (const styleName in prev) {
             if (next[styleName] == null) {
@@ -63,7 +57,6 @@ function patchDomProp(prev, next, key, el) {
           }
         }
 
-        // 值为一个对象，循环设置样式
         for (const styleName in next) {
           el.style[styleName] = next[styleName];
         }
@@ -76,6 +69,7 @@ function patchDomProp(prev, next, key, el) {
         // 将 onClick 转化为 click
         const eventName = key.slice(2).toLowerCase();
 
+        // 删除原有事件
         if (prev) {
           el.removeEventListener(eventName, prev);
         }

@@ -12,6 +12,8 @@ export function transformText(node) {
         if (isText(child)) {
           for (let j = i + 1; j < children.length; j++) {
             const next = children[j];
+
+            // 找到了则进行合并
             if (isText(next)) {
               if (!currentContainer) {
                 currentContainer = children[i] = {

@@ -25,11 +25,9 @@ function createCodegenContext() {
       newline(context.indentLevel);
     }
   };
-
   function newline(n) {
     context.push('\n' + '  '.repeat(n));
   }
-
   return context;
 }
 
@@ -123,7 +121,7 @@ function genProps(props, context) {
       // value
       genPropValue(value, context);
     } else {
-      // 如果 key 不存在就认为是一个 v-bind
+      // 如果 key 不存在就说明是一个 v-bind
       const { content, isStatic } = value;
       const contentStr = JSON.stringify(content);
       push(`${contentStr}: ${isStatic ? contentStr : content}`);
@@ -184,7 +182,7 @@ function genTextData(node, context) {
       ? content.content
       : '';
 
-  // 默认文本节点没有属性
+  // 再偷个懒，默认文本节点没有属性
   push('h(Text, ');
   push('null, ');
   push(`${textContent})`);

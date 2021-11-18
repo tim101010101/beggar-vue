@@ -5,11 +5,10 @@ import { queueJob } from './scheduler';
 import { baseCompile } from '../compiler';
 
 export function mountComponent(vnode, container, anchor) {
-  // 组件的 type 是一个对象，里面有 props、render、setup等
+  // 组件的 type 是一个对象
+  // 里面有 props、render、setup等
   const { type: Component } = vnode;
 
-  // attribute 是元素标签的属性
-  // property 是元素对象的属性
   const instance = (vnode.component = {
     props: null,
     attrs: null,
@@ -25,8 +24,11 @@ export function mountComponent(vnode, container, anchor) {
 
   const { setup } = Component;
   if (setup) {
+    // 这里偷懒了，其实 setupContext 还有 slots 和 emits
     const setupContext = createSetupContext(instance);
     const setupResult = setup(instance.props, setupContext);
+    // const setupResult = setup.call(instance, instance.props, setupContext);
+
     instance.setupState = setupResult;
 
     //! 此处有问题
@@ -44,54 +46,27 @@ export function mountComponent(vnode, container, anchor) {
 
   if (!Component.render && Component.template) {
     let { template } = Component;
-
     if (template[0] === '#') {
       const el = document.querySelector(template);
       template = el ? el.innerHTML : '';
     }
-
     const { code } = baseCompile(template);
     Component.render = new Function('ctx', code);
   }
 
-  console.log(Component.render);
-
   instance.update = effect(() => {
-    // 首次 mount
     if (!instance.isMounted) {
-      // 将这次的 subTree 保存在 instance 实例上
-      // Component.render 返回一个 VNode 对象
-      // 即 subTree
       const subTree = (instance.subTree = normalizeVNode(
         Component.render(instance.ctx)
       ));
       inheritAttrs(instance, subTree);
       patch(null, subTree, container, anchor);
-
-      // 绑定实体节点
-      // subTree 实际上就是组件配置对象中 render 返回的 VNode
-      // 也就是说 subTree 就是一个 VNode
-      // 而一开始挂载是在 render(Comp, document.body) 时
-      // 这时 vnode 是 Comp
-      // 可是实际上我们希望直接把 subTree 渲染到当前的 vnode 中
-      // 因此要复用 vnode 的 el
       vnode.el = subTree.el;
-
-      // 更新
       instance.isMounted = true;
-    }
-
-    // 更新
-    else {
-      // next 存在
-      // 说明是被动更新
+    } else {
       if (instance.next) {
-        // 将当前的 vnode 赋值为 n2
         vnode = instance.next;
-        // 清空, 否则下次还进入这里
         instance.next = null;
-
-        // 更新一下 props
         updateProps(instance, vnode);
 
         // 更新 ctx
@@ -103,12 +78,7 @@ export function mountComponent(vnode, container, anchor) {
         };
       }
 
-      // 正常的更新流程
-
-      // 拿到原先的 VNode
       const prev = instance.subTree;
-
-      // 拿到这次的 VNode
       const subTree = (instance.subTree = normalizeVNode(
         Component.render(instance.ctx)
       ));
@@ -120,7 +90,6 @@ export function mountComponent(vnode, container, anchor) {
   }, queueJob);
 }
 
-// TODO
 // eslint-disable-next-line no-unused-vars
 const handleSetupResult = (instance, setupResult) => {
   // 这里源码进行了其他的操作

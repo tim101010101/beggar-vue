@@ -1,4 +1,4 @@
-import { hasChanged, isObject } from '../utils';
+import { isObject, hasChanged } from '../utils';
 import { reactive } from './reactive';
 import { track, trigger } from './effect';
 
@@ -12,15 +12,18 @@ export function ref(value) {
 class RefImpl {
   constructor(value) {
     this.__isRef = true;
-    this.__value = convert(value);
+    this._value = convert(value);
   }
+
   get value() {
     track(this, 'value');
-    return this.__value;
+    return this._value;
   }
   set value(newValue) {
-    if (hasChanged(newValue, this.__value)) {
-      this.__value = convert(newValue);
+    if (hasChanged(newValue, this._value)) {
+      // 传递的值有可能是对象，用 convert 做处理
+      this._value = convert(newValue);
+      // 赋值完毕后再触发更新，否则无法得到新值
       trigger(this, 'value');
     }
   }
@@ -34,8 +37,6 @@ function convert(value) {
 // TODO
 const shallowUnwrapHandlers = {
   get(target, key, receiver) {
-    // 如果是 ref 类型直接返回 .value
-    // 如果不是就返回 value
     return unRef(Reflect.get(target, key, receiver));
   },
 
@@ -61,7 +62,6 @@ export function isRef(value) {
   return !!(value && value.__isRef);
 }
 
-// 自动拆箱
 export function unRef(ref) {
   return isRef(ref) ? ref.value : ref;
 }

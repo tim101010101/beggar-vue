@@ -23,11 +23,11 @@ const targetMap = new WeakMap();
 // 一个副作用函数可能依赖多个响应式对象，一个响应式对象可能依赖多个属性
 // 同一个属性又可能被多个副作用依赖，因此 targetMap 结构如下
 // {
-//     [targetMap]: { // key 是 reactiveObject，value 是一个 Map
-//         [key]: [effectFn...] // key 是 reactiveObject 的键值，value 是一个 set
+//     [target]: { // key 是 reactiveObject，value 是一个 Map
+//         [key]: [effectFn.....] // key 是 reactiveObject 的键值，value 是一个 set
 //     }
 // }
-// 使用 WeakMap 的原因：当 reactiveObject 不再使用后不必手动删除，垃圾回收系统会自动回收
+// 使用 WeakMap 的原因：个人猜想是当 reactiveObject 不再使用后不必手动删除，垃圾回收系统会自动回收
 
 export function track(target, key) {
   if (!activeEffect) return;
@@ -55,8 +55,8 @@ export function trigger(target, key) {
   const deps = depsMap.get(key);
   if (!deps) return;
 
+  // 优先执行调度函数, 副作用函数本身
   deps.forEach((effectFn) => {
-    // 优先执行调度函数, 否则执行副作用函数本身
     effectFn.scheduler ? effectFn.scheduler(effectFn) : effectFn();
   });
 }

@@ -15,6 +15,7 @@ export const transformElement = (node, context) => {
   return function postTransformElement() {
     node = context.currentNode;
 
+    // 只对元素节点进行处理
     if (node.type !== NodeTypes.ELEMENT) {
       return;
     }
@@ -47,7 +48,6 @@ export const transformElement = (node, context) => {
         const type = child.type;
 
         // 分析是否存在动态文本子节点，插值表达式和复合文本节点
-        // 复合文本节点在 transformText 中介绍
         const hasDynamicTextChild =
           type === NodeTypes.INTERPOLATION ||
           type === NodeTypes.COMPOUND_EXPRESSION;
@@ -69,7 +69,6 @@ export const transformElement = (node, context) => {
     }
 
     // 格式化 patchFlag
-    // 源码中只在开发环境中进行
     if (patchFlag !== 0) {
       if (patchFlag < 0) {
         vnodePatchFlag = patchFlag + ` /* ${PatchFlagNames[patchFlag]} */`;
@@ -131,7 +130,7 @@ function buildProps(node, context, props = node.props) {
         hasHydrationEventBinding = true;
       }
 
-      // 源码在这里跳过 cacheHandler 以及静态值的属性
+      // 源码在这里会忽略 cacheHandler 以及有静态值的属性
 
       if (name === 'class') {
         hasClassBinding = true;
@@ -141,7 +140,7 @@ function buildProps(node, context, props = node.props) {
         dynamicPropNames.push(name);
       }
 
-      // treat the dynamic class and style binding of the component as dynamic props
+      // 将组件上绑定的类名以及样式视为动态属性
       if (
         isComponent &&
         (name === 'class' || name === 'style') &&
@@ -150,6 +149,8 @@ function buildProps(node, context, props = node.props) {
         dynamicPropNames.push(name);
       }
     } else {
+      // 属性名不是简单表达式 (SIMPLE_EXPRESSION) 的话
+      // 则视为有动态键名
       hasDynamicKeys = true;
     }
   };
@@ -178,16 +179,10 @@ function buildProps(node, context, props = node.props) {
 
       // 处理无参数的 v-bind 以及 v-on
       if (!arg && (isVBind || isVOn)) {
-        // 有动态的键
         hasDynamicKeys = true;
-
-        // 有值的话，则进行处理
         if (exp) {
           if (properties.length) {
-            mergeArgs.push(
-              // createObjectExpression(dedupeProperties(properties))
-              createObjectExpression(properties)
-            );
+            mergeArgs.push(createObjectExpression(properties));
             properties = [];
           }
 
@@ -205,12 +200,10 @@ function buildProps(node, context, props = node.props) {
         continue;
       }
 
-      // 运行时指令处理
       const directiveTransform = context.directiveTransforms[name];
       // 内置指令
       if (directiveTransform) {
         const { props, needRuntime } = directiveTransform(prop, node, context);
-        // 每个属性都去执行一遍 analyzePatchFlag
         props.forEach(analyzePatchFlag);
         properties.push(...props);
         if (needRuntime) {
@@ -227,7 +220,6 @@ function buildProps(node, context, props = node.props) {
 
   let propsExpression = undefined;
 
-  // 合并 v-bind 和 v-on
   if (mergeArgs.length) {
     if (properties.length) {
       mergeArgs.push(createObjectExpression(properties));
@@ -236,6 +228,7 @@ function buildProps(node, context, props = node.props) {
     if (mergeArgs.length > 1) {
       propsExpression = createCallExpression(mergeArgs);
     } else {
+      // 只有一个 v-bind
       propsExpression = mergeArgs[0];
     }
   } else if (properties.length) {
@@ -277,21 +270,15 @@ function buildProps(node, context, props = node.props) {
         let styleKeyIndex = -1;
         let hasDynamicKey = false;
 
-        // 遍历所有 props，获取类名以及样式的索引
-        // 并判断是否有动态键名
         for (let i = 0; i < propsExpression.properties.length; i++) {
           const key = propsExpression.properties[i].key;
-
-          // 是静态键名
           if (isStaticExp(key)) {
             if (key.content === 'class') {
               classKeyIndex = i;
             } else if (key.content === 'style') {
               styleKeyIndex = i;
             }
-          }
-          // 是动态键名
-          else if (!key.isHandlerKey) {
+          } else if (!key.isHandlerKey) {
             hasDynamicKey = true;
           }
         }
@@ -299,7 +286,7 @@ function buildProps(node, context, props = node.props) {
         const classProp = propsExpression.properties[classKeyIndex];
         const styleProp = propsExpression.properties[styleKeyIndex];
 
-        // 没有动态键名
+        // no dynamic key
         if (!hasDynamicKey) {
           // 类名的值是动态的话则包装一下类名的值
           if (classProp && !isStaticExp(classProp.value)) {
@@ -323,7 +310,7 @@ function buildProps(node, context, props = node.props) {
         }
         break;
       case NodeTypes.JS_CALL_EXPRESSION:
-        // 合并属性，不需要处理
+        // 不需要处理
         break;
 
       default:
