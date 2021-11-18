@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beggar Vue</title>
+    <style>
+      .a {
+        font-size: large;
+      }
+    </style>
+  </head>
+  <script src="./dist/lib.es.js"></script>
+  <body>
+    <div id="app">
+      <div>
+        <p class="a">hello Beggar Vue</p>
+        <div>counter: {{ counter.value }}</div>
+        <button @click="add">click</button>
+      </div>
+    </div>
+    <script>
+      createApp({
+        setup() {
+          const counter = ref(0);
+          const add = () => counter.value++;
+          return {
+            counter,
+            add
+          };
+        }
+      }).mount('#app');
+    </script>
+  </body>
+</html>

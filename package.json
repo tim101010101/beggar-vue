@@ -1,0 +1,25 @@
+{
+  "name": "beggar-vue",
+  "version": "1.0.0",
+  "description": "The most simplified implementation of vue3",
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "vite build && vite",
+    "dev": "vite",
+    "build": "vite build",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "vue3"
+  ],
+  "author": "tim10101",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.4.1",
+    "jest": "^27.3.1",
+    "vite": "^2.6.13"
+  }
+}
